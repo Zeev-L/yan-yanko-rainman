@@ -1,6 +1,6 @@
 # Rainman
 
-[![CI](https://github.com/yan-yanko/rainman/actions/workflows/ci.yml/badge.svg)](https://github.com/yan-yanko/rainman/actions/workflows/ci.yml)
+[![CI](https://github.com/Zeev-L/yan-yanko-rainman/actions/workflows/ci.yml/badge.svg)](https://github.com/Zeev-L/yan-yanko-rainman/actions/workflows/ci.yml)
 
 **Context-aware project memory for AI coding tools.** Rainman remembers what you've built, what failed, and what works — then surfaces the right knowledge to your AI assistant *at the moment it's needed*, without being asked.
 
@@ -55,7 +55,7 @@ The module that was "unfindable" now surfaces as the **#1 result** in every rele
 
 ```bash
 # Install straight from GitHub (no PyPI required)
-pip install git+https://github.com/yan-yanko/rainman.git
+pip install git+https://github.com/Zeev-L/yan-yanko-rainman.git
 
 # Initialize .rainman/ in your project
 cd /your/project
@@ -299,8 +299,8 @@ CLAUDE.md                 Project instructions for AI assistants
 
 ```bash
 # Clone
-git clone https://github.com/yan-yanko/rainman.git
-cd rainman
+git clone https://github.com/Zeev-L/yan-yanko-rainman.git
+cd yan-yanko-rainman
 
 # Install in editable mode (only setuptools is needed)
 pip install -e .
