@@ -152,10 +152,20 @@ Every memory receives a weighted composite score on recall. Weights are **fixed*
 
 | Component | Weight | What It Does |
 |-----------|--------|--------------|
-| **Keyword** | 0.35 | Keyword overlap across content + tags + file refs, with a rehearsal boost |
+| **Keyword** | 0.35 | Semantic-aware term overlap across content + tags + file refs, with a rehearsal boost |
 | **Recency** | 0.25 | ACT-R power-law decay, **14-day half-life**, reset on each access |
 | **Importance** | 0.20 | Category-based (failure 0.9, solution 0.8, decision 0.7…) plus keyword boost |
 | **Associative** | 0.20 | Boost from being linked to other high-scoring memories |
+
+### Semantic Matching (no embeddings, no LLM)
+
+The keyword component is more than literal string matching. Each query term is matched against memory tokens by the best of three strategies, all pure stdlib:
+
+1. **Exact match** — same token.
+2. **Stem match** — plural/verb forms collapse together (`tokens`↔`token`, `migrations`↔`migrate`).
+3. **Synonym group** — a curated, domain-aware map links paraphrases (`electoral skew` ↔ `voting bias`, `db` ↔ `database`, `auth` ↔ `authentication`).
+
+Tokenization strips punctuation and stopwords, so `"Fixed the bug."` matches a query for `bug`. Synonym matches are weighted slightly below exact/stem matches to preserve precision — unrelated terms still score zero. This closes the biggest gap of naive keyword retrieval (missing semantically-equivalent phrasings) without giving up the zero-cost, fully-local design. See [`rainman/core/text.py`](rainman/core/text.py).
 
 ### Two-Phase Retrieval
 
@@ -287,7 +297,7 @@ rainman/                  Python package (the core product)
     files.py              Scan the project file tree into memories
   __main__.py             CLI entry point (argparse)
 
-tests/                    124 tests, <1s, stdlib unittest/pytest
+tests/                    137 tests, <1s, stdlib unittest/pytest
 landing/                  Marketing site (Vite + React + Tailwind)
 demo-video/               Programmatic demo video (Remotion)
 docs/, site/              Built/static site assets
@@ -306,14 +316,14 @@ cd yan-yanko-rainman
 pip install -e .
 
 # Run the test suite (fast — under a second)
-pytest tests/                 # all 124 tests
+pytest tests/                 # all 137 tests
 pytest tests/ -m unit         # unit tests only
 
 # Self-check the install end-to-end
 rainman doctor
 ```
 
-**Test breakdown:** scoring (22), engine (25), MCP server (19), integration (14), hooks (13), regressions (12), sentiment (10), CLI smoke (9).
+**Test breakdown:** engine (25), scoring (22), MCP server (19), integration (14), hooks (13), semantic recall (13), regressions (12), sentiment (10), CLI smoke (9).
 
 The `landing/` and `demo-video/` sub-projects are independent Node/Vite workspaces with their own `package.json`; they are not required to use or develop the core Python package.
 

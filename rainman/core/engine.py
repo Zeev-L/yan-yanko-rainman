@@ -17,6 +17,7 @@ import uuid
 from typing import Dict, List, Optional, Any
 
 from rainman.core.models import Memory, RecallResult
+from rainman.core.text import tokenize, stems_of
 from rainman.core.sentiment import classify_sentiment
 from rainman.core.scoring import (
     compute_score,
@@ -121,7 +122,7 @@ class RainmanEngine:
         Project memories get 1.2x boost over global.
         """
         self._ensure_loaded()
-        query_words = query.lower().split()
+        query_words = tokenize(query)
 
         if not self._memories:
             return []
@@ -283,18 +284,18 @@ class RainmanEngine:
         return base
 
     def _find_related(self, content: str, max_links: int = 3) -> List[str]:
-        """Find related memories by keyword overlap."""
+        """Find related memories by stem-normalized keyword overlap."""
         if not self._memories:
             return []
 
-        content_words = set(content.lower().split())
+        content_words = stems_of(tokenize(content))
         if len(content_words) < 2:
             return []
 
         scored = []
         # Only check recent 100 for speed
         for entry in self._memories[-100:]:
-            entry_words = set(entry.content.lower().split())
+            entry_words = stems_of(tokenize(entry.content))
             if not entry_words:
                 continue
             overlap = len(content_words & entry_words) / max(

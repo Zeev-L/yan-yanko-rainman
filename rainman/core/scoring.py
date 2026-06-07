@@ -18,6 +18,7 @@ import time
 from typing import Dict, List, Optional
 
 from rainman.core.models import Memory
+from rainman.core.text import normalize_terms, tokenize, stems_of, token_relevance
 
 
 # Fixed scoring weights (no personality modulation)
@@ -46,28 +47,39 @@ IMPORTANCE_KEYWORDS = {
 }
 
 
+def memory_token_index(entry: Memory):
+    """
+    Build the (tokens, stems) sets a memory exposes for matching.
+    Covers content + tags + file_refs (paths split into parts).
+    """
+    tokens = set(tokenize(entry.content))
+    for t in entry.tags:
+        tokens.update(tokenize(t))
+    for ref in entry.file_refs:
+        tokens.update(tokenize(ref))
+    return tokens, stems_of(list(tokens))
+
+
 def keyword_score(entry: Memory, query_words: List[str]) -> float:
     """
-    Keyword overlap between query and memory content.
+    Semantic-aware keyword overlap between query and memory.
+
+    For each normalized query term we take the best of: exact match,
+    shared stem (plurals/verb forms), or shared synonym group — so
+    paraphrases like "electoral skew" still match "voting bias".
     Boosted by recall count (rehearsal effect from ACT-R).
-    Also checks tags and file_refs for matches.
     """
     if not query_words:
         return 0.0
 
-    content_words = set(entry.content.lower().split())
-    tag_words = {t.lower() for t in entry.tags}
-    ref_words = set()
-    for ref in entry.file_refs:
-        # "engine/election/predictor.py" -> {"engine", "election", "predictor", "py", "predictor.py"}
-        parts = ref.replace("\\", "/").replace("/", " ").replace(".", " ").lower().split()
-        ref_words.update(parts)
-        # Also add the full filename
-        ref_words.add(ref.replace("\\", "/").split("/")[-1].lower())
+    q_terms = normalize_terms(query_words)
+    if not q_terms:
+        return 0.0
 
-    all_words = content_words | tag_words | ref_words
-    matched = sum(1 for w in query_words if w in all_words)
-    overlap = matched / len(query_words)
+    mem_tokens, mem_stems = memory_token_index(entry)
+
+    matched = sum(token_relevance(qt, mem_tokens, mem_stems) for qt in q_terms)
+    overlap = matched / len(q_terms)
 
     # Rehearsal boost (ACT-R: frequently recalled memories strengthen)
     rehearsal = 1 + entry.recall_count * 0.1
