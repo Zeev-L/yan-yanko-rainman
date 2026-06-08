@@ -7,11 +7,11 @@ Fires when Claude Code starts a new session.
 Outputs project context (recent + important memories) to stdout.
 Claude sees this as fresh context at session start.
 
-Register in .claude/settings.json:
+Register in .claude/settings.json (startup/resume/clear, not compaction):
 {
     "hooks": {
         "SessionStart": [{
-            "matcher": "",
+            "matcher": "startup|resume|clear",
             "hooks": [{
                 "type": "command",
                 "command": "python -m rainman.hooks.session_start"

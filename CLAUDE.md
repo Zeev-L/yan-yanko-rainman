@@ -117,10 +117,10 @@ Register: `claude mcp add rainman -- python -m rainman serve`
 
 ## Hooks
 
-| Hook | Event | What It Does |
-|------|-------|-------------|
-| session_start.py | SessionStart | Loads project context at session start |
-| post_compact.py | PostCompact | Re-injects relevant memories after compaction |
+| Hook | Event (matcher) | What It Does |
+|------|-----------------|-------------|
+| session_start.py | SessionStart (startup\|resume\|clear) | Loads project context at session start |
+| post_compact.py | SessionStart (compact) | Re-injects relevant memories after compaction (no "PostCompact" event exists) |
 | post_tool_use.py | PostToolUse | Auto-learns from Read/Edit/Write/Bash tool usage |
 
 ## Hard Rules
@@ -139,4 +139,4 @@ Register: `claude mcp add rainman -- python -m rainman serve`
 - `engine.recall()` returns `RecallResult` with score breakdown (keyword, recency, importance, associative)
 - `engine.context()` needs no query — returns blend of 60% recent + 40% high-importance
 - `store.load_all()` merges both layers; `store.save_one()` persists to the correct layer file
-- Hooks read JSON from stdin, output to stdout (PostCompact, SessionStart) or stay silent (PostToolUse)
+- Hooks read JSON from stdin, output to stdout (session_start, post_compact — both SessionStart) or stay silent (post_tool_use)

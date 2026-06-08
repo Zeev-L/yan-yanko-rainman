@@ -1,20 +1,22 @@
 #!/usr/bin/env python3
 """
-PostCompact Hook — The Killer Feature
-=======================================
+Post-Compaction Re-Injection Hook — The Killer Feature
+======================================================
 
-Fires when Claude Code compacts context (long sessions).
+Runs right after Claude Code compacts context (long sessions).
 This is EXACTLY when memories get lost.
 
-Reads compaction event, extracts current working topic,
-recalls relevant memories, and outputs them to stdout
-for re-injection into Claude's context.
+Claude Code has no "PostCompact" event — instead it fires `SessionStart`
+with source "compact" once compaction completes. So this hook is wired to
+SessionStart with matcher "compact". It reads the event, extracts the current
+working topic, recalls relevant memories, and outputs them to stdout for
+re-injection into Claude's context.
 
 Register in .claude/settings.json:
 {
     "hooks": {
-        "PostCompact": [{
-            "matcher": "auto",
+        "SessionStart": [{
+            "matcher": "compact",
             "hooks": [{
                 "type": "command",
                 "command": "python -m rainman.hooks.post_compact"

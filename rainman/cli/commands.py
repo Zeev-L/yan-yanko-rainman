@@ -252,18 +252,31 @@ def cmd_setup() -> None:
     settings_path = os.path.join(claude_dir, "settings.json")
 
     hooks_config = {
+        "SessionStart": [
+            {
+                # New session / resume / clear → load project context
+                "matcher": "startup|resume|clear",
+                "hooks": [{
+                    "type": "command",
+                    "command": f"{python_path} -m rainman.hooks.session_start",
+                }],
+            },
+            {
+                # After a context compaction → re-inject relevant memories.
+                # Claude Code fires SessionStart with source "compact" once
+                # compaction completes (there is no "PostCompact" event).
+                "matcher": "compact",
+                "hooks": [{
+                    "type": "command",
+                    "command": f"{python_path} -m rainman.hooks.post_compact",
+                }],
+            },
+        ],
         "PostToolUse": [{
             "matcher": "",
             "hooks": [{
                 "type": "command",
                 "command": f"{python_path} -m rainman.hooks.post_tool_use",
-            }],
-        }],
-        "SubagentTurnEnd": [{
-            "matcher": "auto",
-            "hooks": [{
-                "type": "command",
-                "command": f"{python_path} -m rainman.hooks.post_compact",
             }],
         }],
     }

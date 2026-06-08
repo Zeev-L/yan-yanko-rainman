@@ -115,19 +115,21 @@ Or add it to your project's `.mcp.json`:
 
 ### Lifecycle Hooks
 
-Add to `.claude/settings.json` for fully automatic memory management:
+Add to `.claude/settings.json` for fully automatic memory management (or just run `rainman setup`, which writes this for you):
 
 ```json
 {
   "hooks": {
-    "SessionStart": [{
-      "matcher": "",
-      "hooks": [{ "type": "command", "command": "python -m rainman.hooks.session_start" }]
-    }],
-    "PostCompact": [{
-      "matcher": "auto",
-      "hooks": [{ "type": "command", "command": "python -m rainman.hooks.post_compact" }]
-    }],
+    "SessionStart": [
+      {
+        "matcher": "startup|resume|clear",
+        "hooks": [{ "type": "command", "command": "python -m rainman.hooks.session_start" }]
+      },
+      {
+        "matcher": "compact",
+        "hooks": [{ "type": "command", "command": "python -m rainman.hooks.post_compact" }]
+      }
+    ],
     "PostToolUse": [{
       "matcher": "",
       "hooks": [{ "type": "command", "command": "python -m rainman.hooks.post_tool_use" }]
@@ -136,13 +138,13 @@ Add to `.claude/settings.json` for fully automatic memory management:
 }
 ```
 
-| Hook | Event | What It Does |
-|------|-------|--------------|
-| **SessionStart** | New session | Loads project context so Claude starts knowing what exists |
-| **PostCompact** | Context compaction | Re-injects relevant memories after context loss — **the killer feature** |
-| **PostToolUse** | After Read/Edit/Write/Bash | Auto-learns from file reads, edits, and test runs |
+| Event (matcher) | Script | What It Does |
+|-----------------|--------|--------------|
+| `SessionStart` (`startup\|resume\|clear`) | `session_start` | Loads project context so Claude starts knowing what exists |
+| `SessionStart` (`compact`) | `post_compact` | Re-injects relevant memories after a context compaction — **the killer feature** |
+| `PostToolUse` | `post_tool_use` | Auto-learns from file reads, edits, and test runs |
 
-> **Why PostCompact matters most.** During long sessions Claude's context gets compacted and earlier knowledge is dropped. This hook fires at exactly that moment, recalls the relevant memories, and re-injects them into the fresh context — so the assistant doesn't "forget" mid-task.
+> **Why the compaction hook matters most.** During long sessions Claude's context gets compacted and earlier knowledge is dropped. Claude Code has no dedicated "post-compact" event — instead it re-fires `SessionStart` with source `compact` once compaction completes, which is exactly when this hook recalls the relevant memories and re-injects them into the fresh context — so the assistant doesn't "forget" mid-task.
 
 ## How It Works
 
