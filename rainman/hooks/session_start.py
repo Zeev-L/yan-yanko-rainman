@@ -26,6 +26,19 @@ import os
 import sys
 
 
+def _emit_context(text: str) -> None:
+    """
+    Emit context for Claude Code to inject, using the documented
+    SessionStart structured output (hookSpecificOutput.additionalContext).
+    """
+    print(json.dumps({
+        "hookSpecificOutput": {
+            "hookEventName": "SessionStart",
+            "additionalContext": text,
+        }
+    }))
+
+
 def main():
     # Read hook input from stdin
     try:
@@ -58,8 +71,8 @@ def main():
         "Use `remember` to save new learnings."
     )
 
-    # Output to stdout — Claude sees this as context
-    print("\n".join(lines))
+    # Structured output — Claude Code injects additionalContext into the session
+    _emit_context("\n".join(lines))
 
 
 if __name__ == "__main__":

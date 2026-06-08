@@ -222,8 +222,12 @@ class TestSessionStart:
         hook_input = {"cwd": project}
         result = _run_hook("rainman.hooks.session_start", hook_input, project)
         assert result.returncode == 0
-        assert "[Rainman]" in result.stdout
-        assert "auth" in result.stdout
+        # Structured output: valid JSON with hookSpecificOutput.additionalContext
+        payload = json.loads(result.stdout)
+        assert payload["hookSpecificOutput"]["hookEventName"] == "SessionStart"
+        ctx = payload["hookSpecificOutput"]["additionalContext"]
+        assert "[Rainman]" in ctx
+        assert "auth" in ctx
 
     def test_malformed_json_exits_cleanly(self, project_dir):
         project, global_dir = project_dir
@@ -265,8 +269,12 @@ class TestPostCompact:
         }
         result = _run_hook("rainman.hooks.post_compact", hook_input, project)
         assert result.returncode == 0
-        assert "[Rainman]" in result.stdout
-        assert "rate" in result.stdout.lower() or "payment" in result.stdout.lower()
+        # Structured output: valid JSON injected via SessionStart additionalContext
+        payload = json.loads(result.stdout)
+        assert payload["hookSpecificOutput"]["hookEventName"] == "SessionStart"
+        ctx = payload["hookSpecificOutput"]["additionalContext"]
+        assert "[Rainman]" in ctx
+        assert "rate" in ctx.lower() or "payment" in ctx.lower()
 
     def test_malformed_json_exits_cleanly(self, project_dir):
         project, global_dir = project_dir
