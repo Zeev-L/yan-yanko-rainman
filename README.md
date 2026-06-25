@@ -89,6 +89,11 @@ And a built-in self-test verifies the engine, storage, and integrations:
 rainman doctor
 ```
 
+> 🤖 **With Claude Code:** this whole setup is **fully agent-runnable** — Rainman
+> is local and zero-token, so there are **no API keys or accounts** to provide.
+> An agent can `pip install`, run `rainman setup` (wires `.rainman/` + MCP + Claude
+> Code hooks) and `rainman doctor`, end to end, with no human-only step.
+
 ## Claude Code Integration
 
 ### MCP Server (recommended)
